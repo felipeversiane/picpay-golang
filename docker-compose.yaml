@@ -1,8 +1,5 @@
 version: '3.0'
 
-volumes:
-  local_postgres_data: {}
-  
 services:
   db:
     container_name: pg01
@@ -23,6 +20,18 @@ services:
       retries: 3
       start_period: 20s
 
+  migrate:
+    image: migrate/migrate
+    container_name: mg01
+    volumes:
+      - ./migrations:/migrations
+    command: ["-path", "/migrations", "-database",  "${POSTGRES_URL}" , "up"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - golangnetwork
+
   api:
     build:
       context: .
@@ -34,10 +43,13 @@ services:
     ports:
       - "$PORT:$PORT"
     depends_on:
-      db:
-          condition: service_healthy 
+      - db
+      - migrate
     networks:
       - golangnetwork
+
+volumes:
+  local_postgres_data: {}
 
 networks:
   golangnetwork:

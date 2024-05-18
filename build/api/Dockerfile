@@ -8,6 +8,6 @@ ADD . /app
 
 WORKDIR /app
 
-RUN go build -o main cmd/server/main.go
+RUN go build -o main cmd/api/main.go
 
 CMD ["/app/main"]

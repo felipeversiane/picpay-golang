@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -18,8 +17,6 @@ func NewConnection(ctx context.Context, connectionString string) (*pgxpool.Pool,
 	if err != nil {
 		return nil, err
 	}
-
-	cfg.ConnConfig.Tracer = otelpgx.NewTracer()
 
 	Conn, err = pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {

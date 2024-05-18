@@ -1,0 +1,43 @@
+version: '3.0'
+
+volumes:
+  local_postgres_data: {}
+  
+services:
+  db:
+    container_name: pg01
+    env_file: .env
+    build:
+      context: .
+      dockerfile: build/db/Dockerfile
+    volumes:
+      - local_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "$POSTGRES_PORT:$POSTGRES_PORT"
+    networks:
+      - golangnetwork
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -d $POSTGRES_DB -U $POSTGRES_USER || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  api:
+    build:
+      context: .
+      dockerfile: build/api/Dockerfile
+    image: app
+    container_name: go01
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "$PORT:$PORT"
+    depends_on:
+      db:
+          condition: service_healthy 
+    networks:
+      - golangnetwork
+
+networks:
+  golangnetwork:

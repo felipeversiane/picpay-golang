@@ -36,8 +36,10 @@ services:
     build:
       context: .
       dockerfile: build/api/Dockerfile
+    image: app
     container_name: go01
     restart: unless-stopped
+    env_file: .env
     ports:
       - "$PORT:$PORT"
     depends_on:

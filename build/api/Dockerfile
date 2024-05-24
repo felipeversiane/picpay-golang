@@ -2,6 +2,7 @@ FROM golang:1.22-alpine3.20 as builder
 
 WORKDIR /app
 COPY . .
+
 ENV GIN_MODE=${GIN_MODE:-release}
 
 RUN go get -d -v ./...

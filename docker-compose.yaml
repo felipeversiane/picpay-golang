@@ -32,29 +32,12 @@ services:
     networks:
       - golangnetwork
 
-  air:
-    image: cosmtrek/air
-    working_dir: /app
-    container_name: air01
-    ports:
-      - "$PORT:$PORT"
-    healthcheck:
-      test: curl -fsS localhost:$PORT/health
-    volumes:
-      - ./:/app
-    depends_on:
-      db:
-        condition: service_healthy
-
-
   api:
     build:
       context: .
       dockerfile: build/api/Dockerfile
-    image: app
     container_name: go01
     restart: unless-stopped
-    env_file: .env
     ports:
       - "$PORT:$PORT"
     depends_on:

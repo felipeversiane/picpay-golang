@@ -27,19 +27,43 @@ func NewUserHandler(
 }
 
 type UserHandler interface {
-	FindUserByIDHandler(c *gin.Context)
+	FindUserByDocumentHandler(c *gin.Context)
 	FindUserByEmailHandler(c *gin.Context)
 	DeleteUserHandler(c *gin.Context)
 	InsertUserHandler(c *gin.Context)
 	UpdateUserHandler(c *gin.Context)
 }
 
-func (uh userHandler) FindUserByIDHandler(c *gin.Context) {
+func (uh userHandler) FindUserByDocumentHandler(c *gin.Context) {
+	document := c.Param("document")
 
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	user, err := uh.userService.FindUserByDocumentService(document, ctxTimeout)
+	if err != nil {
+		logger.Error("Error finding user by Document", err, zap.String("journey", "findUserByDocument"))
+		c.JSON(err.Code, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (uh userHandler) FindUserByEmailHandler(c *gin.Context) {
+	email := c.Param("email")
 
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	user, err := uh.userService.FindUserByEmailService(email, ctxTimeout)
+	if err != nil {
+		logger.Error("Error finding user by Email", err, zap.String("journey", "findUserByEmail"))
+		c.JSON(err.Code, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (uh userHandler) DeleteUserHandler(c *gin.Context) {

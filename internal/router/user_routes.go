@@ -16,6 +16,9 @@ func UserRoutes(r *gin.RouterGroup) *gin.RouterGroup {
 	user := r.Group("/user")
 	{
 		user.POST("/insert_user", handler.InsertUserHandler)
+		user.GET("/find_user_by_document/:document", handler.FindUserByDocumentHandler)
+		user.GET("/find_user_by_email/:email", handler.FindUserByEmailHandler)
+
 	}
 
 	return user

@@ -27,8 +27,8 @@ func NewUserService(
 type UserService interface {
 	InsertUserService(ctx context.Context, user domain.UserDomainInterface) (
 		response.UserResponse, *http_error.HttpError)
-	FindUserByIDService(
-		id uuid.UUID, ctx context.Context,
+	FindUserByDocumentService(
+		document string, ctx context.Context,
 	) (response.UserResponse, *http_error.HttpError)
 	FindUserByEmailService(
 		email string, ctx context.Context,
@@ -39,6 +39,14 @@ type UserService interface {
 
 func (uc *userService) InsertUserService(ctx context.Context, user domain.UserDomainInterface) (response.UserResponse, *http_error.HttpError) {
 	user.EncryptPassword()
+	_, err := uc.FindUserByDocumentService(user.GetDocument(), ctx)
+	if err == nil {
+		return response.UserResponse{}, http_error.NewBadRequestError("Document is already registered in another account")
+	}
+	_, err = uc.FindUserByEmailService(user.GetEmail(), ctx)
+	if err == nil {
+		return response.UserResponse{}, http_error.NewBadRequestError("Email is already registered in another account")
+	}
 	result, err := uc.userRepository.InsertUserRepository(ctx, user)
 	if err != nil {
 		logger.Error("Error trying to call repository",
@@ -49,12 +57,12 @@ func (uc *userService) InsertUserService(ctx context.Context, user domain.UserDo
 	return result, nil
 }
 
-func (uc *userService) FindUserByIDService(id uuid.UUID, ctx context.Context) (response.UserResponse, *http_error.HttpError) {
-	result, err := uc.userRepository.FindUserByIDRepository(ctx, id)
+func (uc *userService) FindUserByDocumentService(document string, ctx context.Context) (response.UserResponse, *http_error.HttpError) {
+	result, err := uc.userRepository.FindUserByDocumentRepository(ctx, document)
 	if err != nil {
 		logger.Error("Error trying to call repository",
 			err,
-			zap.String("journey", "FindUserByID"))
+			zap.String("journey", "FindUserByDocument"))
 		return response.UserResponse{}, err
 	}
 	return result, nil

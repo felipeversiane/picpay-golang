@@ -97,9 +97,36 @@ func (ur *userRepository) FindUserByEmailRepository(ctx context.Context, email s
 }
 
 func (ur *userRepository) UpdateUserRepository(ctx context.Context, user domain.UserDomainInterface, id uuid.UUID) *http_error.HttpError {
+	query := `
+		UPDATE users 
+		SET 
+			first_name = $1, 
+			last_name = $2, 
+			balance = $3, 
+			is_merchant = $4, 
+			updated_at = now() 
+		WHERE 
+			id = $5
+	`
+	_, err := ur.conn.Exec(
+		ctx, query,
+		user.GetFirstName(),
+		user.GetLastName(),
+		user.GetBalance(),
+		user.GetIsMerchant(),
+		id,
+	)
+	if err != nil {
+		return http_error.NewInternalServerError(err.Error())
+	}
 	return nil
 }
 
 func (ur *userRepository) DeleteUserRepository(ctx context.Context, id uuid.UUID) *http_error.HttpError {
+	query := "DELETE FROM users WHERE id = $1"
+	_, err := ur.conn.Exec(ctx, query, id)
+	if err != nil {
+		return http_error.NewInternalServerError(err.Error())
+	}
 	return nil
 }

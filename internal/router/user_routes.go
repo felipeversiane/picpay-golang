@@ -18,6 +18,8 @@ func UserRoutes(r *gin.RouterGroup) *gin.RouterGroup {
 		user.POST("/insert_user", handler.InsertUserHandler)
 		user.GET("/find_user_by_document/:document", handler.FindUserByDocumentHandler)
 		user.GET("/find_user_by_email/:email", handler.FindUserByEmailHandler)
+		user.DELETE("/delete_user/:id", handler.DeleteUserHandler)
+		user.PUT("/update_user/:id", handler.UpdateUserHandler)
 
 	}
 

@@ -5,12 +5,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/felipeversiane/picpay-golang.git/config/http_error"
 	"github.com/felipeversiane/picpay-golang.git/config/logger"
 	"github.com/felipeversiane/picpay-golang.git/config/validation"
 	domain "github.com/felipeversiane/picpay-golang.git/internal"
 	"github.com/felipeversiane/picpay-golang.git/internal/entity/request"
 	"github.com/felipeversiane/picpay-golang.git/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -67,7 +69,31 @@ func (uh userHandler) FindUserByEmailHandler(c *gin.Context) {
 }
 
 func (uh userHandler) DeleteUserHandler(c *gin.Context) {
+	id, parseError := uuid.Parse(c.Param("id"))
+	if parseError != nil {
+		logger.Error("Error trying to validate userId",
+			parseError,
+			zap.String("journey", "DeleteUser"),
+		)
+		errorMessage := http_error.NewBadRequestError(
+			"The ID is not a valid id",
+		)
 
+		c.JSON(errorMessage.Code, errorMessage)
+		return
+	}
+
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	serviceError := uh.userService.DeleteUserService(id, ctxTimeout)
+	if serviceError != nil {
+		logger.Error("Error trying to call deleteUser service", serviceError, zap.String("journey", "DeleteUser"))
+		c.JSON(serviceError.Code, serviceError)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func (uh userHandler) InsertUserHandler(c *gin.Context) {
@@ -107,5 +133,49 @@ func (uh userHandler) InsertUserHandler(c *gin.Context) {
 }
 
 func (uh userHandler) UpdateUserHandler(c *gin.Context) {
+	var userRequest request.UserUpdateRequest
 
+	if err := c.ShouldBindJSON(&userRequest); err != nil {
+		logger.Error("Error trying to validate user info", err,
+			zap.String("journey", "updateUser"))
+		errRest := validation.ValidateError(err)
+
+		c.JSON(errRest.Code, errRest)
+		return
+	}
+
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		logger.Error("Error trying to validate userId",
+			err,
+			zap.String("journey", "Update"),
+		)
+		errorMessage := http_error.NewBadRequestError(
+			"The ID is not a valid id",
+		)
+
+		c.JSON(errorMessage.Code, errorMessage)
+		return
+	}
+
+	domain := domain.NewUserUpdateDomain(
+		userRequest.FirstName,
+		userRequest.LastName,
+		userRequest.Balance,
+		userRequest.IsMerchant,
+	)
+
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	if err := uh.userService.UpdateUserService(id, domain, ctxTimeout); err != nil {
+		logger.Error(
+			"Error trying to call updateUser service",
+			err,
+			zap.String("journey", "updateUser"))
+		c.JSON(err.Code, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
 }

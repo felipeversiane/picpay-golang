@@ -25,12 +25,9 @@ type UserDomainInterface interface {
 	GetID() uuid.UUID
 	GetEmail() string
 	GetIsMerchant() bool
-	SetIsMerchant(isMerchant bool)
 	GetCreatedAt() time.Time
 	GetDocument() string
-	SetCreatedAt(createdAt time.Time)
 	GetUpdatedAt() time.Time
-	SetUpdatedAt(updatedAt time.Time)
 	GetFirstName() string
 	GetLastName() string
 	GetPassword() string
@@ -88,24 +85,12 @@ func (u *userDomain) GetIsMerchant() bool {
 	return u.isMerchant
 }
 
-func (u *userDomain) SetIsMerchant(isMerchant bool) {
-	u.isMerchant = isMerchant
-}
-
 func (u *userDomain) GetCreatedAt() time.Time {
 	return u.createdAt
 }
 
-func (u *userDomain) SetCreatedAt(createdAt time.Time) {
-	u.createdAt = createdAt
-}
-
 func (u *userDomain) GetUpdatedAt() time.Time {
 	return u.updatedAt
-}
-
-func (u *userDomain) SetUpdatedAt(updatedAt time.Time) {
-	u.updatedAt = updatedAt
 }
 
 func (u *userDomain) GetFirstName() string {

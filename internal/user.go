@@ -8,20 +8,37 @@ import (
 	"github.com/google/uuid"
 )
 
-type User struct {
-	ID         uuid.UUID `json:"id"`
-	Email      string    `json:"email" binding:"required,email"`
-	Password   string    `json:"password" binding:"required,min=6,containsany=!@&*%$#"`
-	FirstName  string    `json:"first_name" binding:"min=4,max=50"`
-	LastName   string    `json:"last_name" binding:"min=4,max=50"`
-	Document   string    `json:"balance" binding:"required,numeric,min=0"`
-	Balance    float64   `json:"document" binding:"required"`
-	IsMerchant bool      `json:"is_merchant" default:"false"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+type userDomain struct {
+	id         uuid.UUID
+	email      string
+	password   string
+	firstName  string
+	lastName   string
+	document   string
+	balance    float64
+	isMerchant bool
+	createdAt  time.Time
+	updatedAt  time.Time
 }
 
-func NewUser(
+type UserDomainInterface interface {
+	GetID() uuid.UUID
+	GetEmail() string
+	GetIsMerchant() bool
+	SetIsMerchant(isMerchant bool)
+	GetCreatedAt() time.Time
+	GetDocument() string
+	SetCreatedAt(createdAt time.Time)
+	GetUpdatedAt() time.Time
+	SetUpdatedAt(updatedAt time.Time)
+	GetFirstName() string
+	GetLastName() string
+	GetPassword() string
+	GetBalance() float64
+	EncryptPassword()
+}
+
+func NewUserDomain(
 	email string,
 	password string,
 	first_name string,
@@ -29,18 +46,18 @@ func NewUser(
 	isMerchant bool,
 	document string,
 	balance float64,
-) *User {
-	return &User{
-		ID:         uuid.New(),
-		Email:      email,
-		Password:   password,
-		FirstName:  first_name,
-		LastName:   last_name,
-		IsMerchant: isMerchant,
-		Document:   document,
-		Balance:    balance,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+) *userDomain {
+	return &userDomain{
+		id:         uuid.New(),
+		email:      email,
+		password:   password,
+		firstName:  first_name,
+		lastName:   last_name,
+		isMerchant: isMerchant,
+		document:   document,
+		balance:    balance,
+		createdAt:  time.Now(),
+		updatedAt:  time.Now(),
 	}
 }
 
@@ -49,18 +66,71 @@ func NewUserUpdateDomain(
 	last_name string,
 	balance float64,
 	isMerchant bool,
-) *User {
-	return &User{
-		FirstName:  first_name,
-		LastName:   last_name,
-		Balance:    balance,
-		IsMerchant: isMerchant,
-		UpdatedAt:  time.Now(),
+) UserDomainInterface {
+	return &userDomain{
+		firstName:  first_name,
+		lastName:   last_name,
+		balance:    balance,
+		isMerchant: isMerchant,
+		updatedAt:  time.Now(),
 	}
 }
 
-func EncryptPassword(password string) string {
+func (u *userDomain) GetID() uuid.UUID {
+	return u.id
+}
+
+func (u *userDomain) GetEmail() string {
+	return u.email
+}
+
+func (u *userDomain) GetIsMerchant() bool {
+	return u.isMerchant
+}
+
+func (u *userDomain) SetIsMerchant(isMerchant bool) {
+	u.isMerchant = isMerchant
+}
+
+func (u *userDomain) GetCreatedAt() time.Time {
+	return u.createdAt
+}
+
+func (u *userDomain) SetCreatedAt(createdAt time.Time) {
+	u.createdAt = createdAt
+}
+
+func (u *userDomain) GetUpdatedAt() time.Time {
+	return u.updatedAt
+}
+
+func (u *userDomain) SetUpdatedAt(updatedAt time.Time) {
+	u.updatedAt = updatedAt
+}
+
+func (u *userDomain) GetFirstName() string {
+	return u.firstName
+}
+
+func (u *userDomain) GetLastName() string {
+	return u.lastName
+}
+
+func (u *userDomain) GetPassword() string {
+	return u.password
+}
+
+func (u *userDomain) GetBalance() float64 {
+	return u.balance
+}
+
+func (u *userDomain) GetDocument() string {
+	return u.document
+}
+
+func (u *userDomain) EncryptPassword() {
 	hash := md5.New()
-	hash.Write([]byte(password))
-	return hex.EncodeToString(hash.Sum(nil))
+	defer hash.Reset()
+	hash.Write([]byte(u.password))
+	u.password = hex.EncodeToString(hash.Sum(nil))
 }

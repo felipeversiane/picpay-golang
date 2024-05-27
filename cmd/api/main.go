@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"net/http"
 	"os"
 
 	"github.com/felipeversiane/picpay-golang.git/bootstrap"
 	"github.com/felipeversiane/picpay-golang.git/config/db"
 	"github.com/felipeversiane/picpay-golang.git/config/logger"
+	"github.com/felipeversiane/picpay-golang.git/internal/router"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -48,9 +48,7 @@ func main() {
 
 	g := gin.New()
 	g.Use(gin.Recovery())
-	g.GET("/health", func(c *gin.Context) {
-		c.Status(http.StatusOK)
-	})
+	router.InitRoutes(g)
 	logger.Info("Routes initialized sucessfully.",
 		zap.String("journey", "Initialize Routes"))
 	g.Run()

@@ -30,10 +30,39 @@ func NewUserHandler(
 
 type UserHandler interface {
 	FindUserByDocumentHandler(c *gin.Context)
+	FindUserByIDHandler(c *gin.Context)
 	FindUserByEmailHandler(c *gin.Context)
 	DeleteUserHandler(c *gin.Context)
 	InsertUserHandler(c *gin.Context)
 	UpdateUserHandler(c *gin.Context)
+}
+
+func (uh userHandler) FindUserByIDHandler(c *gin.Context) {
+	id, parseError := uuid.Parse(c.Param("id"))
+	if parseError != nil {
+		logger.Error("Error trying to validate userId",
+			parseError,
+			zap.String("journey", "DeleteUser"),
+		)
+		errorMessage := http_error.NewBadRequestError(
+			"The ID is not a valid id",
+		)
+
+		c.JSON(errorMessage.Code, errorMessage)
+		return
+	}
+
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	user, err := uh.userService.FindUserByIDService(id, ctxTimeout)
+	if err != nil {
+		logger.Error("Error finding user by ID", err, zap.String("journey", "findUserByID"))
+		c.JSON(err.Code, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (uh userHandler) FindUserByDocumentHandler(c *gin.Context) {

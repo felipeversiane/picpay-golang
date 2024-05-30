@@ -30,6 +30,9 @@ type UserService interface {
 	FindUserByDocumentService(
 		document string, ctx context.Context,
 	) (response.UserResponse, *http_error.HttpError)
+	FindUserByIDService(
+		id uuid.UUID, ctx context.Context,
+	) (response.UserResponse, *http_error.HttpError)
 	FindUserByEmailService(
 		email string, ctx context.Context,
 	) (response.UserResponse, *http_error.HttpError)
@@ -59,6 +62,17 @@ func (uc *userService) InsertUserService(ctx context.Context, user domain.UserDo
 
 func (uc *userService) FindUserByDocumentService(document string, ctx context.Context) (response.UserResponse, *http_error.HttpError) {
 	result, err := uc.userRepository.FindUserByDocumentRepository(ctx, document)
+	if err != nil {
+		logger.Error("Error trying to call repository",
+			err,
+			zap.String("journey", "FindUserByDocument"))
+		return response.UserResponse{}, err
+	}
+	return result, nil
+}
+
+func (uc *userService) FindUserByIDService(id uuid.UUID, ctx context.Context) (response.UserResponse, *http_error.HttpError) {
+	result, err := uc.userRepository.FindUserByIDRepository(ctx, id)
 	if err != nil {
 		logger.Error("Error trying to call repository",
 			err,

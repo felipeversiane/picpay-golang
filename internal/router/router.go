@@ -10,6 +10,8 @@ func InitRoutes(r *gin.Engine) {
 	v1 := r.Group("/api/v1")
 	{
 		UserRoutes(v1)
+		OrderRoutes(v1)
+
 	}
 
 	r.GET("/health", func(c *gin.Context) {

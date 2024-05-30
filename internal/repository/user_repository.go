@@ -26,6 +26,7 @@ func NewUserRepository(
 type UserRepository interface {
 	InsertUserRepository(ctx context.Context, user domain.UserDomainInterface) (response.UserResponse, *http_error.HttpError)
 	FindUserByDocumentRepository(ctx context.Context, document string) (response.UserResponse, *http_error.HttpError)
+	FindUserByIDRepository(ctx context.Context, id uuid.UUID) (response.UserResponse, *http_error.HttpError)
 	FindUserByEmailRepository(ctx context.Context, email string) (response.UserResponse, *http_error.HttpError)
 	UpdateUserRepository(ctx context.Context, user domain.UserDomainInterface, id uuid.UUID) *http_error.HttpError
 	DeleteUserRepository(ctx context.Context, id uuid.UUID) *http_error.HttpError
@@ -58,6 +59,27 @@ func (ur *userRepository) FindUserByDocumentRepository(ctx context.Context, docu
 	query := "SELECT id, email, password, first_name, last_name, document, balance, is_merchant, created_at, updated_at FROM users WHERE document = $1"
 	var foundUser response.UserResponse
 	err := ur.conn.QueryRow(ctx, query, document).Scan(
+		&foundUser.ID, &foundUser.Email,
+		&foundUser.Password, &foundUser.FirstName,
+		&foundUser.LastName, &foundUser.Document,
+		&foundUser.Balance, &foundUser.IsMerchant,
+		&foundUser.CreatedAt, &foundUser.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return response.UserResponse{}, http_error.NewNotFoundError("User not found")
+		}
+		return response.UserResponse{}, http_error.NewInternalServerError(err.Error())
+	}
+
+	return foundUser, nil
+}
+
+func (ur *userRepository) FindUserByIDRepository(ctx context.Context, id uuid.UUID) (response.UserResponse, *http_error.HttpError) {
+	query := "SELECT id, email, password, first_name, last_name, document, balance, is_merchant, created_at, updated_at FROM users WHERE id = $1"
+	var foundUser response.UserResponse
+	err := ur.conn.QueryRow(ctx, query, id).Scan(
 		&foundUser.ID, &foundUser.Email,
 		&foundUser.Password, &foundUser.FirstName,
 		&foundUser.LastName, &foundUser.Document,

@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	swagger "github.com/swaggo/gin-swagger"
 )
 
 func InitRoutes(r *gin.Engine) {
@@ -17,5 +19,6 @@ func InitRoutes(r *gin.Engine) {
 	r.GET("/health", func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})
+	r.GET("/docs/*any", swagger.WrapHandler(swaggerFiles.Handler))
 
 }

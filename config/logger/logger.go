@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -54,6 +55,16 @@ func Warn(message string, tags ...zap.Field) {
 func Fatal(message string, err error, tags ...zap.Field) {
 	tags = append(tags, zap.NamedError("error", err))
 	log.Fatal(message, tags...)
+	log.Sync()
+}
+
+func Println(v ...interface{}) {
+	log.Info(strings.TrimSuffix(fmt.Sprintln(v...), "\n"))
+	log.Sync()
+}
+
+func Printf(format string, v ...interface{}) {
+	log.Info(fmt.Sprintf(format, v...))
 	log.Sync()
 }
 

@@ -36,7 +36,7 @@ type UserService interface {
 	FindUserByEmailService(
 		email string, ctx context.Context,
 	) (response.UserResponse, *http_error.HttpError)
-	UpdateUserService(id uuid.UUID, user domain.UserDomainInterface, ctx context.Context) *http_error.HttpError
+	UpdateUserService(id uuid.UUID, user domain.UserDomainInterface, ctx context.Context) (response.UserResponse, *http_error.HttpError)
 	DeleteUserService(id uuid.UUID, ctx context.Context) *http_error.HttpError
 }
 
@@ -93,19 +93,29 @@ func (uc *userService) FindUserByEmailService(email string, ctx context.Context)
 	return result, nil
 }
 
-func (uc *userService) UpdateUserService(id uuid.UUID, user domain.UserDomainInterface, ctx context.Context) *http_error.HttpError {
-	err := uc.userRepository.UpdateUserRepository(ctx, user, id)
+func (uc *userService) UpdateUserService(id uuid.UUID, user domain.UserDomainInterface, ctx context.Context) (response.UserResponse, *http_error.HttpError) {
+	_, err := uc.FindUserByIDService(id, ctx)
+	if err != nil {
+		return response.UserResponse{}, http_error.NewNotFoundError("User not found")
+	}
+
+	result, err := uc.userRepository.UpdateUserRepository(ctx, user, id)
 	if err != nil {
 		logger.Error("Error trying to call repository",
 			err,
 			zap.String("journey", "UpdateUser"))
-		return err
+		return response.UserResponse{}, err
 	}
-	return nil
+	return result, nil
 }
 
 func (uc *userService) DeleteUserService(id uuid.UUID, ctx context.Context) *http_error.HttpError {
-	err := uc.userRepository.DeleteUserRepository(ctx, id)
+	_, err := uc.FindUserByIDService(id, ctx)
+	if err != nil {
+		return http_error.NewNotFoundError("User not found")
+	}
+
+	err = uc.userRepository.DeleteUserRepository(ctx, id)
 	if err != nil {
 		logger.Error("Error trying to call repository",
 			err,

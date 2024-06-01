@@ -74,14 +74,14 @@ func (oc *orderService) InsertOrderService(ctx context.Context, order domain.Ord
 
 	payer.Balance -= order.GetAmount()
 	payerUpdate := domain.NewUserUpdateDomain(payer.FirstName, payer.LastName, payer.Balance, payer.IsMerchant)
-	if err := oc.userService.UpdateUserService(payer.ID, payerUpdate, ctx); err != nil {
+	if _, err := oc.userService.UpdateUserService(payer.ID, payerUpdate, ctx); err != nil {
 		logger.Error("Error updating payer balance", err, zap.String("journey", "UpdatePayerBalance"))
 		return response.OrderResponse{}, http_error.NewInternalServerError("Error updating payer balance")
 	}
 
 	payee.Balance += order.GetAmount()
 	payeeUpdate := domain.NewUserUpdateDomain(payee.FirstName, payee.LastName, payee.Balance, payee.IsMerchant)
-	if err := oc.userService.UpdateUserService(payee.ID, payeeUpdate, ctx); err != nil {
+	if _, err := oc.userService.UpdateUserService(payee.ID, payeeUpdate, ctx); err != nil {
 		logger.Error("Error updating payee balance", err, zap.String("journey", "UpdatePayeeBalance"))
 
 		return response.OrderResponse{}, http_error.NewInternalServerError("Error updating payee balance")

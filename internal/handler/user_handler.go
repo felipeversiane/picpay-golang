@@ -122,7 +122,7 @@ func (uh userHandler) DeleteUserHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusNoContent, gin.H{})
 }
 
 func (uh userHandler) InsertUserHandler(c *gin.Context) {
@@ -158,7 +158,7 @@ func (uh userHandler) InsertUserHandler(c *gin.Context) {
 		c.JSON(err.Code, err)
 		return
 	}
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusCreated, result)
 }
 
 func (uh userHandler) UpdateUserHandler(c *gin.Context) {
@@ -197,14 +197,15 @@ func (uh userHandler) UpdateUserHandler(c *gin.Context) {
 	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	if err := uh.userService.UpdateUserService(id, domain, ctxTimeout); err != nil {
+	result, serviceErr := uh.userService.UpdateUserService(id, domain, ctxTimeout)
+	if serviceErr != nil {
 		logger.Error(
 			"Error trying to call updateUser service",
-			err,
+			serviceErr,
 			zap.String("journey", "updateUser"))
-		c.JSON(err.Code, err)
+		c.JSON(serviceErr.Code, serviceErr)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusCreated, result)
 }

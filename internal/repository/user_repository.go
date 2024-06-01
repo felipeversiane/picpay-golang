@@ -28,7 +28,7 @@ type UserRepository interface {
 	FindUserByDocumentRepository(ctx context.Context, document string) (response.UserResponse, *http_error.HttpError)
 	FindUserByIDRepository(ctx context.Context, id uuid.UUID) (response.UserResponse, *http_error.HttpError)
 	FindUserByEmailRepository(ctx context.Context, email string) (response.UserResponse, *http_error.HttpError)
-	UpdateUserRepository(ctx context.Context, user domain.UserDomainInterface, id uuid.UUID) *http_error.HttpError
+	UpdateUserRepository(ctx context.Context, user domain.UserDomainInterface, id uuid.UUID) (response.UserResponse, *http_error.HttpError)
 	DeleteUserRepository(ctx context.Context, id uuid.UUID) *http_error.HttpError
 }
 
@@ -118,7 +118,7 @@ func (ur *userRepository) FindUserByEmailRepository(ctx context.Context, email s
 	return foundUser, nil
 }
 
-func (ur *userRepository) UpdateUserRepository(ctx context.Context, user domain.UserDomainInterface, id uuid.UUID) *http_error.HttpError {
+func (ur *userRepository) UpdateUserRepository(ctx context.Context, user domain.UserDomainInterface, id uuid.UUID) (response.UserResponse, *http_error.HttpError) {
 	query := `
 		UPDATE users 
 		SET 
@@ -129,19 +129,36 @@ func (ur *userRepository) UpdateUserRepository(ctx context.Context, user domain.
 			updated_at = now() 
 		WHERE 
 			id = $5
+		RETURNING id, email, password, first_name, last_name, document, balance, is_merchant, created_at, updated_at
 	`
-	_, err := ur.conn.Exec(
-		ctx, query,
+
+	var updatedUser response.UserResponse
+	err := ur.conn.QueryRow(ctx, query,
 		user.GetFirstName(),
 		user.GetLastName(),
 		user.GetBalance(),
 		user.GetIsMerchant(),
 		id,
+	).Scan(
+		&updatedUser.ID,
+		&updatedUser.Email,
+		&updatedUser.Password,
+		&updatedUser.FirstName,
+		&updatedUser.LastName,
+		&updatedUser.Document,
+		&updatedUser.Balance,
+		&updatedUser.IsMerchant,
+		&updatedUser.CreatedAt,
+		&updatedUser.UpdatedAt,
 	)
 	if err != nil {
-		return http_error.NewInternalServerError(err.Error())
+		if err == pgx.ErrNoRows {
+			return response.UserResponse{}, http_error.NewNotFoundError("User not found")
+		}
+		return response.UserResponse{}, http_error.NewInternalServerError(err.Error())
 	}
-	return nil
+
+	return updatedUser, nil
 }
 
 func (ur *userRepository) DeleteUserRepository(ctx context.Context, id uuid.UUID) *http_error.HttpError {

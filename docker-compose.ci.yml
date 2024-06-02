@@ -11,7 +11,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     build:
       context: .
-      dockerfile: build/db/Dockerfile-build
+      dockerfile: build/db/Dockerfile
     volumes:
       - local_postgres_data:/var/lib/postgresql/data
     ports:
@@ -40,7 +40,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: build/api/Dockerfile
+      dockerfile: build/api/Dockerfile-build
     image: app
     container_name: go01
     restart: unless-stopped

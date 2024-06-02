@@ -6,7 +6,7 @@ services:
     env_file: .env
     build:
       context: .
-      dockerfile: build/db/Dockerfile-dev
+      dockerfile: build/db/Dockerfile
     volumes:
       - local_postgres_data:/var/lib/postgresql/data
     ports:
@@ -35,7 +35,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: build/api/Dockerfile
+      dockerfile: build/api/Dockerfile-dev
     image: app
     container_name: go01
     restart: unless-stopped

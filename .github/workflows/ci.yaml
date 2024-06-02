@@ -45,6 +45,9 @@ jobs:
         echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
         echo "POSTGRES_URL=${{ secrets.POSTGRES_URL }}" >> .env
 
+    - name: Set up Docker Compose
+      run: docker-compose up -d --build
+
     - name: Run project
       run: make ci
 
@@ -61,3 +64,7 @@ jobs:
 
     - if: failure()
       run: docker-compose logs
+
+    - name: Tear Down
+      if: always()
+      run: docker-compose down

@@ -10,41 +10,50 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version-file: go.mod
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version-file: go.mod
 
-      - name: Build
-        run: go build -v ./...
+    - name: Build
+      run: go build -v ./...
 
-      - name: Test
-        run: go test -v ./internal/...
-
+    - name: Test
+      run: go test -v ./internal/...
+  
   check:
     needs: build
     runs-on: ubuntu-22.04
+    env:
+      PORT: ${{ secrets.PORT }}
+      GIN_MODE: ${{ secrets.GIN_MODE }}
+      LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
+      LOG_OUTPUT: ${{ secrets.LOG_OUTPUT }}
+      AUTHORIZATION_URL: ${{ secrets.AUTHORIZATION_URL }}
+      POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+      POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
     steps:
-      - uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-      - name: Copy .env.example to .env
-        run: cp .env.example .env
+    - name: Run project
+      run: make ci
 
-      - name: Run project
-        run: make ci
+    - name: Set up Go for E2E tests
+      uses: actions/setup-go@v3
+      with:
+        go-version-file: go.mod
 
-      - name: Set up Go for E2E tests
-        uses: actions/setup-go@v3
-        with:
-          go-version-file: go.mod
+    - name: Run E2E tests
+      run: go test -v ./e2e/...
 
-      - name: Run E2E tests
-        run: go test -v ./e2e/...
+    - if: failure()
+      run: docker-compose ps
 
-      - if: failure()
-        run: docker-compose ps
-
-      - if: failure()
-        run: docker-compose logs
+    - if: failure()
+      run: docker-compose logs

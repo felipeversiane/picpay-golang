@@ -6,7 +6,7 @@ services:
     env_file: .env
     build:
       context: .
-      dockerfile: build/db/Dockerfile
+      dockerfile: build/db/Dockerfile-dev
     volumes:
       - local_postgres_data:/var/lib/postgresql/data
     ports:

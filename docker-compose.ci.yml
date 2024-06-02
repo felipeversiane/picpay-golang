@@ -1,0 +1,65 @@
+version: '3.0'
+
+services:
+  db:
+    container_name: pg01
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    build:
+      context: .
+      dockerfile: build/db/Dockerfile-build
+    volumes:
+      - local_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    networks:
+      - golangnetwork
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -d ${POSTGRES_DB} -U ${POSTGRES_USER} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  migrate:
+    image: migrate/migrate
+    container_name: mg01
+    volumes:
+      - ./migrations:/migrations
+    command: ["-path", "/migrations", "-database", "${POSTGRES_URL}", "up"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - golangnetwork
+
+  api:
+    build:
+      context: .
+      dockerfile: build/api/Dockerfile
+    image: app
+    container_name: go01
+    restart: unless-stopped
+    environment:
+      - PORT=${PORT}
+      - GIN_MODE=${GIN_MODE}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_OUTPUT=${LOG_OUTPUT}
+      - AUTHORIZATION_URL=${AUTHORIZATION_URL}
+    ports:
+      - "${PORT}:${PORT}"
+    depends_on:
+      - db
+      - migrate
+    networks:
+      - golangnetwork
+
+volumes:
+  local_postgres_data: {}
+
+networks:
+  golangnetwork:

@@ -31,6 +31,17 @@ func init() {
 		zap.String("journey", "Initialize"))
 }
 
+// @title PicPay Challange
+// @version 1.0
+// @description REST API for a PicPay Challange.
+// @host localhost:9000
+// @BasePath /api/v1
+// @schemes http
+// @termsOfService http://swagger.io/terms/
+// @contact.name API Support
+// @contact.email felipeversiane09@gmail.com
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 func main() {
 	var err error
 	ctx := context.Background()

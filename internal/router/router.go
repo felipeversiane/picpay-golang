@@ -3,6 +3,8 @@ package router
 import (
 	"net/http"
 
+	_ "github.com/felipeversiane/picpay-golang.git/docs"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	swagger "github.com/swaggo/gin-swagger"

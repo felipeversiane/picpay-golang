@@ -33,6 +33,17 @@ type OrderHandler interface {
 	FindOrderByIDHandler(c *gin.Context)
 }
 
+// InsertOrderHandler Creates a new order
+// @Summary Insert a new order
+// @Description Insert a new order with the provided order information
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param orderRequest body request.OrderRequest true "Order information for registration"
+// @Success 200 {object} response.OrderResponse
+// @Failure 400 {object} http_error.HttpError
+// @Failure 500 {object} http_error.HttpError
+// @Router /order [post]
 func (oh *orderHandler) InsertOrderHandler(c *gin.Context) {
 	var orderRequest request.OrderRequest
 
@@ -83,6 +94,17 @@ func (oh *orderHandler) InsertOrderHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// FindOrderByIDHandler retrieves order information based on the provided order ID.
+// @Summary Find Order by ID
+// @Description Retrieves order details based on the order ID provided as a parameter.
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param id path string true "ID of the order to be retrieved"
+// @Success 200 {object} response.OrderResponse "User information retrieved successfully"
+// @Failure 400 {object} http_error.HttpError "Error: Invalid order ID"
+// @Failure 404 {object} http_error.HttpError "User not found"
+// @Router /order/{id} [get]
 func (oh *orderHandler) FindOrderByIDHandler(c *gin.Context) {
 	id, parseError := uuid.Parse(c.Param("id"))
 	if parseError != nil {

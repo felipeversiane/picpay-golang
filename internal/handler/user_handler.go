@@ -37,6 +37,17 @@ type UserHandler interface {
 	UpdateUserHandler(c *gin.Context)
 }
 
+// FindUserByIDHandler retrieves user information based on the provided user ID.
+// @Summary Find User by ID
+// @Description Retrieves user details based on the user ID provided as a parameter.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "ID of the user to be retrieved"
+// @Success 200 {object} response.UserResponse "User information retrieved successfully"
+// @Failure 400 {object} http_error.HttpError "Error: Invalid user ID"
+// @Failure 404 {object} http_error.HttpError "User not found"
+// @Router /user/{id} [get]
 func (uh userHandler) FindUserByIDHandler(c *gin.Context) {
 	id, parseError := uuid.Parse(c.Param("id"))
 	if parseError != nil {
@@ -65,6 +76,16 @@ func (uh userHandler) FindUserByIDHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// FindUserByDocumentHandler retrieves user information based on the provided user document.
+// @Summary Find User by Document
+// @Description Retrieves user details based on the user document provided as a parameter.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param document path string true "Document of the user to be retrieved"
+// @Success 200 {object} response.UserResponse "User information retrieved successfully"
+// @Failure 404 {object} http_error.HttpError "User not found"
+// @Router /user/find_user_by_document/{document} [get]
 func (uh userHandler) FindUserByDocumentHandler(c *gin.Context) {
 	document := c.Param("document")
 
@@ -81,6 +102,16 @@ func (uh userHandler) FindUserByDocumentHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// FindUserByEmailHandler retrieves user information based on the provided user email.
+// @Summary Find User by Email
+// @Description Retrieves user details based on the user email provided as a parameter.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param email path string true "Email of the user to be retrieved"
+// @Success 200 {object} response.UserResponse "User information retrieved successfully"
+// @Failure 404 {object} http_error.HttpError "User not found"
+// @Router /user/find_user_by_email/{email} [get]
 func (uh userHandler) FindUserByEmailHandler(c *gin.Context) {
 	email := c.Param("email")
 
@@ -97,6 +128,17 @@ func (uh userHandler) FindUserByEmailHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// DeleteUserHandler deletes a user with the specified ID.
+// @Summary Delete User
+// @Description Deletes a user based on the ID provided as a parameter.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "ID of the user to be deleted"
+// @Success 200
+// @Failure 400 {object} http_error.HttpError
+// @Failure 500 {object} http_error.HttpError
+// @Router /user/{id} [delete]
 func (uh userHandler) DeleteUserHandler(c *gin.Context) {
 	id, parseError := uuid.Parse(c.Param("id"))
 	if parseError != nil {
@@ -125,6 +167,17 @@ func (uh userHandler) DeleteUserHandler(c *gin.Context) {
 	c.JSON(http.StatusNoContent, gin.H{})
 }
 
+// InsertUserHandler Creates a new user
+// @Summary Insert a new user
+// @Description Insert a new user with the provided user information
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param userRequest body request.UserRequest true "User information for registration"
+// @Success 200 {object} response.UserResponse
+// @Failure 400 {object} http_error.HttpError
+// @Failure 500 {object} http_error.HttpError
+// @Router /user [post]
 func (uh userHandler) InsertUserHandler(c *gin.Context) {
 	var userRequest request.UserRequest
 
@@ -161,6 +214,18 @@ func (uh userHandler) InsertUserHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, result)
 }
 
+// UpdateUserHandler updates user information with the specified ID.
+// @Summary Update User
+// @Description Updates user details based on the ID provided as a parameter.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "ID of the user to be updated"
+// @Param userRequest body request.UserUpdateRequest true "User information for update"
+// @Success 200
+// @Failure 400 {object} http_error.HttpError
+// @Failure 500 {object} http_error.HttpError
+// @Router /user/{id} [put]
 func (uh userHandler) UpdateUserHandler(c *gin.Context) {
 	var userRequest request.UserUpdateRequest
 

@@ -4,21 +4,25 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/felipeversiane/picpay-golang.git/internal/entity/request"
 	"github.com/google/uuid"
 )
 
-func happyData() (email, password, firstName, lastName string, isMerchant bool, document string, balance float64) {
-	email = "pepplvess@example.com"
-	password = "passwor8!F"
-	firstName = "Pedro"
-	lastName = "Silva"
-	isMerchant = false
-	document = "02340229102"
-	balance = 1000.00
-	return
+func happyData() request.UserRequest {
+	return request.UserRequest{
+		Email:      "pelvess@example.com",
+		Password:   "passwor8!F",
+		FirstName:  "Pedro",
+		LastName:   "Silva",
+		Document:   "0234021102",
+		Balance:    1000.00,
+		IsMerchant: false,
+	}
 }
 
 func TestInsertUser_ShouldReturnStatusBadRequest_WhenItHasInvalidData(t *testing.T) {
+	t.Log("*** Test Insert User with Invalid Data")
+
 	api := NewApiClient()
 	params := []map[string]interface{}{
 		nil,
@@ -47,7 +51,9 @@ func TestInsertUser_ShouldReturnStatusBadRequest_WhenItHasInvalidData(t *testing
 	}
 }
 
-func TestDeleteUser_ShouldReturnStatusNotFound_WhenPostIdIsNotOnDatabase(t *testing.T) {
+func TestDeleteUser_ShouldReturnStatusNotFound_WhenUserIsNotOnDatabase(t *testing.T) {
+	t.Log("*** Test Delete User when User is not on Database")
+
 	api := NewApiClient()
 	id := uuid.NewString()
 
@@ -64,7 +70,9 @@ func TestDeleteUser_ShouldReturnStatusNotFound_WhenPostIdIsNotOnDatabase(t *test
 	}
 }
 
-func TestGetUser_ShouldReturnStatusNotFound_WhenPostIdIsNotOnDatabase(t *testing.T) {
+func TestFindUserByID_ShouldReturnStatusNotFound_WhenUserIsNotOnDatabase(t *testing.T) {
+	t.Log("*** Test Find User by ID when User is not on Database")
+
 	api := NewApiClient()
 	id := uuid.NewString()
 
@@ -81,7 +89,9 @@ func TestGetUser_ShouldReturnStatusNotFound_WhenPostIdIsNotOnDatabase(t *testing
 	}
 }
 
-func TestGetUserByEmail_ShouldReturnStatusNotFound_WhenPostIdIsNotOnDatabase(t *testing.T) {
+func TestFindUserByEmail_ShouldReturnStatusNotFound_WhenUserIsNotOnDatabase(t *testing.T) {
+	t.Log("*** Test Find User by Email when User is not on Database")
+
 	api := NewApiClient()
 	email := "jhondoe@xxx.com"
 
@@ -98,7 +108,9 @@ func TestGetUserByEmail_ShouldReturnStatusNotFound_WhenPostIdIsNotOnDatabase(t *
 	}
 }
 
-func TestGetUserByDocument_ShouldReturnStatusNotFound_WhenPostIdIsNotOnDatabase(t *testing.T) {
+func TestFindUserByDocument_ShouldReturnStatusNotFound_WhenUserIsNotOnDatabase(t *testing.T) {
+	t.Log("*** Test Find User by Document when User is not on Database")
+
 	api := NewApiClient()
 	document := "041906777777"
 
@@ -115,31 +127,19 @@ func TestGetUserByDocument_ShouldReturnStatusNotFound_WhenPostIdIsNotOnDatabase(
 	}
 }
 
-func TestUserSucessfully(t *testing.T) {
-	t.Log("*** Start User Successful")
-
-	id := insertUserSuccessfully(t)
-	findUserSuccessfully(id, t)
-	updateUserSuccessfully(id, t)
-	deleteUserSuccessfully(id, t)
-
-	t.Log("*** End User Successful")
-}
-
-func insertUserSuccessfully(t *testing.T) string {
-	t.Log("*** Insert User")
+func insertUserSuccessfully(user request.UserRequest, t *testing.T) string {
+	t.Log("*** Insert User Sucessfully")
 
 	api := NewApiClient()
-	email, password, firstName, lastName, isMerchant, document, balance := happyData()
 
 	payload := map[string]interface{}{
-		"email":       email,
-		"password":    password,
-		"first_name":  firstName,
-		"last_name":   lastName,
-		"is_merchant": isMerchant,
-		"balance":     balance,
-		"document":    document,
+		"email":       user.Email,
+		"password":    user.Password,
+		"first_name":  user.FirstName,
+		"last_name":   user.LastName,
+		"document":    user.Document,
+		"balance":     user.Balance,
+		"is_merchant": user.IsMerchant,
 	}
 
 	resp, err := api.Post("/user", payload)
@@ -167,7 +167,7 @@ func insertUserSuccessfully(t *testing.T) string {
 		t.Fatal("Invalid ID")
 	}
 
-	if res["email"].(string) != email {
+	if res["email"].(string) != user.Email {
 		t.Fatal("Invalid Email")
 	}
 
@@ -179,8 +179,8 @@ func insertUserSuccessfully(t *testing.T) string {
 }
 
 func findUserSuccessfully(id string, t *testing.T) {
-	t.Log("*** Find User")
-	email, _, _, _, _, _, _ := happyData()
+	t.Log("*** Find User Sucessfully")
+	user := happyData()
 	api := NewApiClient()
 
 	resp, err := api.Get("/user/" + id)
@@ -206,24 +206,23 @@ func findUserSuccessfully(id string, t *testing.T) {
 		t.Fatal("Invalid ID")
 	}
 
-	if res["email"].(string) != email {
+	if res["email"].(string) != user.Email {
 		t.Fatal("Invalid Email")
 	}
-
 }
 
 func updateUserSuccessfully(id string, t *testing.T) {
-	t.Log("*** Update User")
+	t.Log("*** Update User Sucessfully")
 	api := NewApiClient()
 
-	email, _, firstName, lastName, isMerchant, _, balance := happyData()
+	user := happyData()
 
 	payload := map[string]interface{}{
-		"email":       email,
-		"first_name":  firstName,
-		"last_name":   lastName,
-		"is_merchant": isMerchant,
-		"balance":     balance,
+		"email":       user.Email,
+		"first_name":  user.FirstName,
+		"last_name":   user.LastName,
+		"is_merchant": user.IsMerchant,
+		"balance":     user.Balance,
 	}
 
 	resp, err := api.Put("/user/"+id, payload)
@@ -249,7 +248,7 @@ func updateUserSuccessfully(id string, t *testing.T) {
 		t.Fatal("Invalid ID")
 	}
 
-	if res["email"].(string) != email {
+	if res["email"].(string) != user.Email {
 		t.Fatal("Invalid Email")
 	}
 
@@ -259,7 +258,7 @@ func updateUserSuccessfully(id string, t *testing.T) {
 }
 
 func deleteUserSuccessfully(id string, t *testing.T) {
-	t.Log("*** Delete User")
+	t.Log("*** Delete User Successfully")
 	api := NewApiClient()
 
 	resp, err := api.Delete("/user/" + id)
@@ -275,4 +274,16 @@ func deleteUserSuccessfully(id string, t *testing.T) {
 			resp.Status,
 		)
 	}
+}
+
+func TestUserSuccessfully(t *testing.T) {
+	t.Log("*** Start User Successfully")
+
+	user := happyData()
+	id := insertUserSuccessfully(user, t)
+	findUserSuccessfully(id, t)
+	updateUserSuccessfully(id, t)
+	deleteUserSuccessfully(id, t)
+
+	t.Log("*** End User Successful")
 }

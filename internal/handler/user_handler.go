@@ -194,9 +194,9 @@ func (uh userHandler) InsertUserHandler(c *gin.Context) {
 		userRequest.Password,
 		userRequest.FirstName,
 		userRequest.LastName,
-		userRequest.IsMerchant,
 		userRequest.Document,
 		userRequest.Balance,
+		userRequest.IsMerchant,
 	)
 
 	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)

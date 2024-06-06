@@ -27,7 +27,6 @@ func NewOrderRepository(
 type OrderRepository interface {
 	InsertOrderRepository(ctx context.Context, order domain.OrderDomainInterface) (response.OrderResponse, *http_error.HttpError)
 	FindOrderByIDRepository(ctx context.Context, orderID uuid.UUID) (response.OrderResponse, *http_error.HttpError)
-	DeleteOrderRepository(ctx context.Context, orderID uuid.UUID) *http_error.HttpError
 }
 
 func (r *orderRepository) InsertOrderRepository(ctx context.Context, order domain.OrderDomainInterface) (response.OrderResponse, *http_error.HttpError) {
@@ -81,13 +80,4 @@ func (r *orderRepository) FindOrderByIDRepository(ctx context.Context, orderID u
 	}
 
 	return order, nil
-}
-
-func (r *orderRepository) DeleteOrderRepository(ctx context.Context, orderID uuid.UUID) *http_error.HttpError {
-	query := "DELETE FROM orders WHERE id = $1"
-	_, err := r.conn.Exec(ctx, query, orderID)
-	if err != nil {
-		return http_error.NewInternalServerError(err.Error())
-	}
-	return nil
 }

@@ -19,7 +19,6 @@ func OrderRoutes(r *gin.RouterGroup) *gin.RouterGroup {
 	{
 		order.POST("/", handler.InsertOrderHandler)
 		order.GET("/:id", handler.FindOrderByIDHandler)
-		order.DELETE("/:id", handler.DeleteOrderHandler)
 	}
 
 	return order

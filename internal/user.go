@@ -40,9 +40,9 @@ func NewUserDomain(
 	password string,
 	first_name string,
 	last_name string,
-	isMerchant bool,
 	document string,
 	balance float64,
+	isMerchant bool,
 ) *userDomain {
 	return &userDomain{
 		id:         uuid.New(),
@@ -50,9 +50,9 @@ func NewUserDomain(
 		password:   password,
 		firstName:  first_name,
 		lastName:   last_name,
-		isMerchant: isMerchant,
 		document:   document,
 		balance:    balance,
+		isMerchant: isMerchant,
 		createdAt:  time.Now(),
 		updatedAt:  time.Now(),
 	}

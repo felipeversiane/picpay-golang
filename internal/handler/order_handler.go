@@ -31,7 +31,6 @@ func NewOrderHandler(
 type OrderHandler interface {
 	InsertOrderHandler(c *gin.Context)
 	FindOrderByIDHandler(c *gin.Context)
-	DeleteOrderHandler(c *gin.Context)
 }
 
 // InsertOrderHandler Creates a new order
@@ -92,7 +91,7 @@ func (oh *orderHandler) InsertOrderHandler(c *gin.Context) {
 		c.JSON(err.Code, err)
 		return
 	}
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusCreated, result)
 }
 
 // FindOrderByIDHandler retrieves order information based on the provided order ID.
@@ -132,43 +131,4 @@ func (oh *orderHandler) FindOrderByIDHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, order)
-}
-
-// DeleteUserHandler deletes a order with the specified ID.
-// @Summary Delete Order
-// @Description Deletes a order based on the ID provided as a parameter.
-// @Tags Orders
-// @Accept json
-// @Produce json
-// @Param id path string true "ID of the order to be deleted"
-// @Success 200
-// @Failure 400 {object} http_error.HttpError
-// @Failure 500 {object} http_error.HttpError
-// @Router /order/{id} [delete]
-func (oh orderHandler) DeleteOrderHandler(c *gin.Context) {
-	id, parseError := uuid.Parse(c.Param("id"))
-	if parseError != nil {
-		logger.Error("Error trying to validate orderId",
-			parseError,
-			zap.String("journey", "DeleteOrder"),
-		)
-		errorMessage := http_error.NewBadRequestError(
-			"The ID is not a valid id",
-		)
-
-		c.JSON(errorMessage.Code, errorMessage)
-		return
-	}
-
-	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-
-	serviceError := oh.orderService.DeleteOrderService(ctxTimeout, id)
-	if serviceError != nil {
-		logger.Error("Error trying to call deleteOrder service", serviceError, zap.String("journey", "DeleteOrder"))
-		c.JSON(serviceError.Code, serviceError)
-		return
-	}
-
-	c.JSON(http.StatusNoContent, gin.H{})
 }

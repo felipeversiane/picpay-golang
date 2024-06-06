@@ -118,15 +118,15 @@ func TestGetUserByDocument_ShouldReturnStatusNotFound_WhenPostIdIsNotOnDatabase(
 func TestUserSucessfully(t *testing.T) {
 	t.Log("*** Start User Successful")
 
-	id := insertSuccessfully(t)
-	findSuccessfully(id, t)
-	updateSuccessfully(id, t)
-	deleteSuccessfully(id, t)
+	id := insertUserSuccessfully(t)
+	findUserSuccessfully(id, t)
+	updateUserSuccessfully(id, t)
+	deleteUserSuccessfully(id, t)
 
 	t.Log("*** End User Successful")
 }
 
-func insertSuccessfully(t *testing.T) string {
+func insertUserSuccessfully(t *testing.T) string {
 	t.Log("*** Insert User")
 
 	api := NewApiClient()
@@ -178,7 +178,7 @@ func insertSuccessfully(t *testing.T) string {
 	return id
 }
 
-func findSuccessfully(id string, t *testing.T) {
+func findUserSuccessfully(id string, t *testing.T) {
 	t.Log("*** Find User")
 	email, _, _, _, _, _, _ := happyData()
 	api := NewApiClient()
@@ -212,7 +212,7 @@ func findSuccessfully(id string, t *testing.T) {
 
 }
 
-func updateSuccessfully(id string, t *testing.T) {
+func updateUserSuccessfully(id string, t *testing.T) {
 	t.Log("*** Update User")
 	api := NewApiClient()
 
@@ -258,7 +258,7 @@ func updateSuccessfully(id string, t *testing.T) {
 	}
 }
 
-func deleteSuccessfully(id string, t *testing.T) {
+func deleteUserSuccessfully(id string, t *testing.T) {
 	t.Log("*** Delete User")
 	api := NewApiClient()
 

@@ -7,11 +7,12 @@ import (
 )
 
 type orderDomain struct {
-	id        uuid.UUID
-	amount    float64
-	payee     uuid.UUID
-	payer     uuid.UUID
-	createdAt time.Time
+	id         uuid.UUID
+	amount     float64
+	payee      uuid.UUID
+	payer      uuid.UUID
+	isReversed bool
+	createdAt  time.Time
 }
 
 type OrderDomainInterface interface {

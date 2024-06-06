@@ -35,6 +35,7 @@ type OrderService interface {
 	InsertOrderService(ctx context.Context, order domain.OrderDomainInterface) (response.OrderResponse, *http_error.HttpError)
 	ValidateAuthorization() bool
 	FindOrderByIDService(ctx context.Context, id uuid.UUID) (response.OrderResponse, *http_error.HttpError)
+	DeleteOrderService(ctx context.Context, id uuid.UUID) *http_error.HttpError
 }
 
 func (oc *orderService) InsertOrderService(ctx context.Context, order domain.OrderDomainInterface) (response.OrderResponse, *http_error.HttpError) {
@@ -136,4 +137,19 @@ func (oc *orderService) FindOrderByIDService(ctx context.Context, id uuid.UUID) 
 		return response.OrderResponse{}, err
 	}
 	return result, nil
+}
+
+func (oc *orderService) DeleteOrderService(ctx context.Context, id uuid.UUID) *http_error.HttpError {
+	_, err := oc.FindOrderByIDService(ctx, id)
+	if err != nil {
+		return http_error.NewNotFoundError("Order not found")
+	}
+	err = oc.orderRepository.DeleteOrderRepository(ctx, id)
+	if err != nil {
+		logger.Error("Error trying to call repository",
+			err,
+			zap.String("journey", "DeleteOrder"))
+		return err
+	}
+	return nil
 }

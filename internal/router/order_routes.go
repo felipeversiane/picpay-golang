@@ -18,7 +18,8 @@ func OrderRoutes(r *gin.RouterGroup) *gin.RouterGroup {
 	order := r.Group("/order")
 	{
 		order.POST("/", handler.InsertOrderHandler)
-		order.GET("/:id", handler.InsertOrderHandler)
+		order.GET("/:id", handler.FindOrderByIDHandler)
+		order.DELETE("/:id", handler.DeleteOrderHandler)
 	}
 
 	return order

@@ -1,7 +1,8 @@
 package e2e
 
 import (
-	"io/ioutil"
+	"encoding/json"
+	"io"
 	"net/http"
 	"testing"
 
@@ -11,11 +12,11 @@ import (
 
 func firstUser() request.UserRequest {
 	return request.UserRequest{
-		Email:      "olikvess@example.com",
+		Email:      "olisvsss@example.com",
 		Password:   "passwor8!F",
 		FirstName:  "Oliveira",
 		LastName:   "Silva",
-		Document:   "2222222",
+		Document:   "992375832",
 		Balance:    1000.00,
 		IsMerchant: true,
 	}
@@ -23,16 +24,15 @@ func firstUser() request.UserRequest {
 
 func secondUser() request.UserRequest {
 	return request.UserRequest{
-		Email:      "pedrinls@example.com",
+		Email:      "pedrnllxss@example.com",
 		Password:   "passwor8!F",
 		FirstName:  "Pedro",
 		LastName:   "Silva",
-		Document:   "3333333",
+		Document:   "323467222",
 		Balance:    200.00,
 		IsMerchant: false,
 	}
 }
-
 func TestInsertOrder_ShouldReturnStatusBadRequest_WhenItHasInvalidData(t *testing.T) {
 	t.Log("*** Test Insert Order with Invalid Data")
 
@@ -51,13 +51,8 @@ func TestInsertOrder_ShouldReturnStatusBadRequest_WhenItHasInvalidData(t *testin
 		if err != nil {
 			t.Fatal(err.Error())
 		}
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Fatalf(
-				"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-				http.StatusBadRequest,
-				resp.Status,
-			)
-		}
+		defer resp.Body.Close()
+		assertStatusCode(t, resp, http.StatusBadRequest)
 	}
 }
 
@@ -71,13 +66,8 @@ func TestFindOrder_ShouldReturnStatusNotFound_WhenOrderIdIsNotOnDatabase(t *test
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	if resp.StatusCode != http.StatusNotFound {
-		t.Fatalf(
-			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-			http.StatusNotFound,
-			resp.Status,
-		)
-	}
+	defer resp.Body.Close()
+	assertStatusCode(t, resp, http.StatusNotFound)
 }
 
 func InsertOrder_ShouldReturnStatusBadRequest_InsufficientBalance(payer string, payee string, t *testing.T) {
@@ -94,13 +84,8 @@ func InsertOrder_ShouldReturnStatusBadRequest_InsufficientBalance(payer string, 
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Fatalf(
-			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-			http.StatusBadRequest,
-			resp.Status,
-		)
-	}
+	defer resp.Body.Close()
+	assertStatusCode(t, resp, http.StatusBadRequest)
 }
 
 func InsertOrder_ShouldReturnStatusBadRequest_MerchantCannotSendMoney(payer string, payee string, t *testing.T) {
@@ -117,16 +102,11 @@ func InsertOrder_ShouldReturnStatusBadRequest_MerchantCannotSendMoney(payer stri
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Fatalf(
-			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-			http.StatusBadRequest,
-			resp.Status,
-		)
-	}
+	defer resp.Body.Close()
+	assertStatusCode(t, resp, http.StatusBadRequest)
 }
 
-func InsertOrderSuccessfully(payer string, payee string, t *testing.T) string {
+func insertOrderSuccessfully(payer string, payee string, t *testing.T) string {
 	t.Log("*** Insert Order Successfully")
 
 	api := NewApiClient()
@@ -173,20 +153,26 @@ func InsertOrderSuccessfully(payer string, payee string, t *testing.T) string {
 		}
 
 		if resp.StatusCode == http.StatusBadRequest {
-			bodyBytes, err := ioutil.ReadAll(resp.Body)
+			bodyBytes, err := io.ReadAll(resp.Body)
 			if err != nil {
 				t.Fatal(err.Error())
 			}
 
-			bodyString := string(bodyBytes)
-			if bodyString == "Order not authorized" {
+			var bodyJson map[string]interface{}
+			if err := json.Unmarshal(bodyBytes, &bodyJson); err != nil {
+				t.Fatal(err.Error())
+			}
+
+			if bodyJson["message"] == "Order not authorized" {
 				t.Log("Order not authorized, retrying...")
-				continue
+				return insertOrderSuccessfully(payer, payee, t)
+			} else {
+				t.Fatalf("Bad Request: %s", bodyJson["message"])
 			}
 		}
 
 		t.Fatalf(
-			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
+			"Invalid Status Code. Expected Stat9us \"%d\" and received \"%s\"",
 			http.StatusCreated,
 			resp.Status,
 		)
@@ -203,13 +189,7 @@ func findOrderSuccessfully(id string, t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf(
-			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-			http.StatusOK,
-			resp.Status,
-		)
-	}
+	assertStatusCode(t, resp, http.StatusOK)
 
 	res, err := api.ParseBody(resp)
 	if err != nil {
@@ -221,20 +201,75 @@ func findOrderSuccessfully(id string, t *testing.T) {
 	}
 }
 
-func TestFlow(t *testing.T) {
-	t.Log("*** Start Flow")
+func deleteOrderUserSuccessfully(id string, t *testing.T) {
+	t.Log("*** Delete Order User Successfully")
+	api := NewApiClient()
+
+	resp, err := api.Delete("/user/" + id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	assertStatusCode(t, resp, http.StatusNoContent)
+}
+
+func insertOrderUserSuccessfully(user request.UserRequest, t *testing.T) string {
+	t.Log("*** Insert Order User Successfully")
+
+	api := NewApiClient()
+
+	payload := map[string]interface{}{
+		"email":       user.Email,
+		"password":    user.Password,
+		"first_name":  user.FirstName,
+		"last_name":   user.LastName,
+		"document":    user.Document,
+		"balance":     user.Balance,
+		"is_merchant": user.IsMerchant,
+	}
+
+	resp, err := api.Post("/user", payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	assertStatusCode(t, resp, http.StatusCreated)
+
+	res, err := api.ParseBody(resp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id := res["id"].(string)
+	if id == "" {
+		t.Fatal("Invalid ID")
+	}
+	if res["email"].(string) != user.Email {
+		t.Fatal("Invalid Email")
+	}
+	if res["created_at"].(string) == "0001-01-01T00:00:00Z" {
+		t.Fatal("Invalid CreatedAt")
+	}
+
+	return id
+}
+
+func TestOrderFlow(t *testing.T) {
+	t.Log("*** Start Order Flow")
 
 	firstUser := firstUser()
 	secondUser := secondUser()
 
-	firstID := insertUserSuccessfully(firstUser, t)
-	secondID := insertUserSuccessfully(secondUser, t)
+	firstID := insertOrderUserSuccessfully(firstUser, t)
+	secondID := insertOrderUserSuccessfully(secondUser, t)
 	InsertOrder_ShouldReturnStatusBadRequest_InsufficientBalance(secondID, firstID, t)
 	InsertOrder_ShouldReturnStatusBadRequest_MerchantCannotSendMoney(firstID, secondID, t)
-	orderID := InsertOrderSuccessfully(secondID, firstID, t)
+	orderID := insertOrderSuccessfully(secondID, firstID, t)
 	findOrderSuccessfully(orderID, t)
-	deleteUserSuccessfully(firstID, t)
-	deleteUserSuccessfully(secondID, t)
+	deleteOrderUserSuccessfully(firstID, t)
+	deleteOrderUserSuccessfully(secondID, t)
 
-	t.Log("*** End Flow Successful")
+	t.Log("*** End Order Flow Successful")
 }

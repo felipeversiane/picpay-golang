@@ -14,7 +14,7 @@ func happyData() request.UserRequest {
 		Password:   "passwor8!F",
 		FirstName:  "Pedro",
 		LastName:   "Silva",
-		Document:   "0234021102",
+		Document:   "0234021111",
 		Balance:    1000.00,
 		IsMerchant: false,
 	}
@@ -39,15 +39,11 @@ func TestInsertUser_ShouldReturnStatusBadRequest_WhenItHasInvalidData(t *testing
 	for _, p := range params {
 		resp, err := api.Post("/user", p)
 		if err != nil {
-			t.Fatal(err.Error())
+			t.Fatal(err)
 		}
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Fatalf(
-				"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-				http.StatusBadRequest,
-				resp.Status,
-			)
-		}
+
+		defer resp.Body.Close()
+		assertStatusCode(t, resp, http.StatusBadRequest)
 	}
 }
 
@@ -59,15 +55,12 @@ func TestDeleteUser_ShouldReturnStatusNotFound_WhenUserIsNotOnDatabase(t *testin
 
 	resp, err := api.Delete("/user/" + id)
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Fatal(err)
 	}
-	if resp.StatusCode != http.StatusNotFound {
-		t.Fatalf(
-			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-			http.StatusNotFound,
-			resp.Status,
-		)
-	}
+
+	defer resp.Body.Close()
+
+	assertStatusCode(t, resp, http.StatusNotFound)
 }
 
 func TestFindUserByID_ShouldReturnStatusNotFound_WhenUserIsNotOnDatabase(t *testing.T) {
@@ -78,15 +71,11 @@ func TestFindUserByID_ShouldReturnStatusNotFound_WhenUserIsNotOnDatabase(t *test
 
 	resp, err := api.Get("/user/" + id)
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Fatal(err)
 	}
-	if resp.StatusCode != http.StatusNotFound {
-		t.Fatalf(
-			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-			http.StatusNotFound,
-			resp.Status,
-		)
-	}
+
+	defer resp.Body.Close()
+	assertStatusCode(t, resp, http.StatusNotFound)
 }
 
 func TestFindUserByEmail_ShouldReturnStatusNotFound_WhenUserIsNotOnDatabase(t *testing.T) {
@@ -97,15 +86,12 @@ func TestFindUserByEmail_ShouldReturnStatusNotFound_WhenUserIsNotOnDatabase(t *t
 
 	resp, err := api.Get("/user/find_user_by_email/" + email)
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Fatal(err)
 	}
-	if resp.StatusCode != http.StatusNotFound {
-		t.Fatalf(
-			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-			http.StatusNotFound,
-			resp.Status,
-		)
-	}
+
+	defer resp.Body.Close()
+
+	assertStatusCode(t, resp, http.StatusNotFound)
 }
 
 func TestFindUserByDocument_ShouldReturnStatusNotFound_WhenUserIsNotOnDatabase(t *testing.T) {
@@ -116,19 +102,16 @@ func TestFindUserByDocument_ShouldReturnStatusNotFound_WhenUserIsNotOnDatabase(t
 
 	resp, err := api.Get("/user/find_user_by_document/" + document)
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Fatal(err)
 	}
-	if resp.StatusCode != http.StatusNotFound {
-		t.Fatalf(
-			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-			http.StatusNotFound,
-			resp.Status,
-		)
-	}
+
+	defer resp.Body.Close()
+
+	assertStatusCode(t, resp, http.StatusNotFound)
 }
 
 func insertUserSuccessfully(user request.UserRequest, t *testing.T) string {
-	t.Log("*** Insert User Sucessfully")
+	t.Log("*** Insert User Successfully")
 
 	api := NewApiClient()
 
@@ -144,33 +127,24 @@ func insertUserSuccessfully(user request.UserRequest, t *testing.T) string {
 
 	resp, err := api.Post("/user", payload)
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Fatal(err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusCreated {
-		t.Fatalf(
-			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-			http.StatusCreated,
-			resp.Status,
-		)
-	}
+	assertStatusCode(t, resp, http.StatusCreated)
 
 	res, err := api.ParseBody(resp)
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Fatal(err)
 	}
 
 	id := res["id"].(string)
-
 	if id == "" {
 		t.Fatal("Invalid ID")
 	}
-
 	if res["email"].(string) != user.Email {
 		t.Fatal("Invalid Email")
 	}
-
 	if res["created_at"].(string) == "0001-01-01T00:00:00Z" {
 		t.Fatal("Invalid CreatedAt")
 	}
@@ -179,42 +153,34 @@ func insertUserSuccessfully(user request.UserRequest, t *testing.T) string {
 }
 
 func findUserSuccessfully(id string, t *testing.T) {
-	t.Log("*** Find User Sucessfully")
+	t.Log("*** Find User Successfully")
 	user := happyData()
 	api := NewApiClient()
 
 	resp, err := api.Get("/user/" + id)
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Fatal(err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf(
-			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-			http.StatusOK,
-			resp.Status,
-		)
-	}
+	assertStatusCode(t, resp, http.StatusOK)
 
 	res, err := api.ParseBody(resp)
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Fatal(err)
 	}
 
 	if res["id"].(string) != id {
 		t.Fatal("Invalid ID")
 	}
-
 	if res["email"].(string) != user.Email {
 		t.Fatal("Invalid Email")
 	}
 }
 
 func updateUserSuccessfully(id string, t *testing.T) {
-	t.Log("*** Update User Sucessfully")
+	t.Log("*** Update User Successfully")
 	api := NewApiClient()
-
 	user := happyData()
 
 	payload := map[string]interface{}{
@@ -227,31 +193,23 @@ func updateUserSuccessfully(id string, t *testing.T) {
 
 	resp, err := api.Put("/user/"+id, payload)
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Fatal(err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusCreated {
-		t.Fatalf(
-			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-			http.StatusCreated,
-			resp.Status,
-		)
-	}
+	assertStatusCode(t, resp, http.StatusCreated)
 
 	res, err := api.ParseBody(resp)
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Fatal(err)
 	}
 
 	if res["id"].(string) != id {
 		t.Fatal("Invalid ID")
 	}
-
 	if res["email"].(string) != user.Email {
 		t.Fatal("Invalid Email")
 	}
-
 	if res["created_at"].(string) == "0001-01-01T00:00:00Z" {
 		t.Fatal("Invalid CreatedAt")
 	}
@@ -263,21 +221,15 @@ func deleteUserSuccessfully(id string, t *testing.T) {
 
 	resp, err := api.Delete("/user/" + id)
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Fatal(err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusNoContent {
-		t.Fatalf(
-			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
-			http.StatusNoContent,
-			resp.Status,
-		)
-	}
+	assertStatusCode(t, resp, http.StatusNoContent)
 }
 
-func TestUserSuccessfully(t *testing.T) {
-	t.Log("*** Start User Successfully")
+func TestUserFlow(t *testing.T) {
+	t.Log("*** Start User Flow ")
 
 	user := happyData()
 	id := insertUserSuccessfully(user, t)
@@ -285,5 +237,5 @@ func TestUserSuccessfully(t *testing.T) {
 	updateUserSuccessfully(id, t)
 	deleteUserSuccessfully(id, t)
 
-	t.Log("*** End User Successful")
+	t.Log("*** End User Flow Successfull")
 }

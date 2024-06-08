@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"testing"
 
 	"github.com/felipeversiane/picpay-golang.git/config/logger"
 )
@@ -118,4 +119,15 @@ func (api *ApiClient) ParseBody(resp *http.Response) (map[string]interface{}, er
 	}
 
 	return data, nil
+}
+
+func assertStatusCode(t *testing.T, resp *http.Response, expected int) {
+	t.Helper()
+	if resp.StatusCode != expected {
+		t.Fatalf(
+			"Invalid Status Code. Expected Status \"%d\" and received \"%s\"",
+			expected,
+			resp.Status,
+		)
+	}
 }

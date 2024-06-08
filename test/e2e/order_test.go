@@ -117,6 +117,9 @@ func insertOrderSuccessfully(payer string, payee string, t *testing.T) string {
 		"payee":  payee,
 	}
 
+	initialPayerBalance := getUserBalance(payer, t)
+	initialPayeeBalance := getUserBalance(payee, t)
+
 	for {
 		resp, err := api.Post("/order", payload)
 		if err != nil {
@@ -148,6 +151,11 @@ func insertOrderSuccessfully(payer string, payee string, t *testing.T) string {
 			if res["payee"].(string) != payee {
 				t.Fatal("Invalid Payee")
 			}
+
+			finalPayerBalance := getUserBalance(payer, t)
+			finalPayeeBalance := getUserBalance(payee, t)
+
+			verifyBalanceChange(initialPayerBalance, finalPayerBalance, initialPayeeBalance, finalPayeeBalance, 100.00, t)
 
 			return id
 		}
@@ -256,6 +264,42 @@ func insertOrderUserSuccessfully(user request.UserRequest, t *testing.T) string 
 	return id
 }
 
+func getUserBalance(id string, t *testing.T) float64 {
+	t.Log("*** Get User Balance")
+
+	api := NewApiClient()
+
+	resp, err := api.Get("/user/" + id)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	defer resp.Body.Close()
+
+	assertStatusCode(t, resp, http.StatusOK)
+
+	res, err := api.ParseBody(resp)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	return res["balance"].(float64)
+}
+
+func verifyBalanceChange(initialPayerBalance, finalPayerBalance, initialPayeeBalance, finalPayeeBalance, amount float64, t *testing.T) {
+	expectedPayerBalance := initialPayerBalance - amount
+	expectedPayeeBalance := initialPayeeBalance + amount
+
+	if finalPayerBalance != expectedPayerBalance {
+		t.Fatalf("Payer balance incorrect. Expected %f but got %f", expectedPayerBalance, finalPayerBalance)
+	}
+
+	if finalPayeeBalance != expectedPayeeBalance {
+		t.Fatalf("Payee balance incorrect. Expected %f but got %f", expectedPayeeBalance, finalPayeeBalance)
+	}
+
+	t.Logf("Balance changes verified: Payer balance: %f -> %f, Payee balance: %f -> %f", initialPayerBalance, finalPayerBalance, initialPayeeBalance, finalPayeeBalance)
+}
+
 func TestOrderFlow(t *testing.T) {
 	t.Log("*** Start Order Flow")
 
@@ -268,6 +312,7 @@ func TestOrderFlow(t *testing.T) {
 	InsertOrder_ShouldReturnStatusBadRequest_MerchantCannotSendMoney(firstID, secondID, t)
 	orderID := insertOrderSuccessfully(secondID, firstID, t)
 	findOrderSuccessfully(orderID, t)
+
 	deleteOrderUserSuccessfully(firstID, t)
 	deleteOrderUserSuccessfully(secondID, t)
 

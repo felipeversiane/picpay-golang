@@ -9,8 +9,6 @@ on:
 env:
   PORT: ${{ secrets.PORT }}
   GIN_MODE: ${{ secrets.GIN_MODE }}
-  JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-  JWT_SECRET_REFRESH_KEY: ${{ secrets.JWT_SECRET_REFRESH_KEY }}
   LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
   LOG_OUTPUT: ${{ secrets.LOG_OUTPUT }}
   AUTHORIZATION_URL: ${{ secrets.AUTHORIZATION_URL }}
@@ -37,6 +35,26 @@ jobs:
 
       - name: Test
         run: go test -v ./internal/...
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Run Snyk to check for Go vulnerabilities
+        uses: snyk/actions/golang@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=critical
+      
+      - name: Run Snyk to check for Docker vulnerabilities
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: build/db/Dockerfile
+        
   
   test:
     needs: build

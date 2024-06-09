@@ -24,7 +24,7 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3  
 
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -40,16 +40,15 @@ jobs:
   security:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3  
 
       - name: Run Snyk to check for Go vulnerabilities
         uses: snyk/actions/golang@master
         with:
           args: --severity-threshold=critical
         
-  
   test:
-    needs: build
+    needs: [build, security]  
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -68,10 +67,12 @@ jobs:
       - name: Run E2E tests
         run: go test -v ./e2e/...
 
-      - if: failure()
+      - name: Print Docker Compose status if failure
+        if: failure()
         run: docker-compose -f docker-compose.ci.yml ps
 
-      - if: failure()
+      - name: Print Docker Compose logs if failure
+        if: failure()
         run: docker-compose -f docker-compose.ci.yml logs
 
       - name: Tear Down

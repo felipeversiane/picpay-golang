@@ -45,6 +45,13 @@ services:
     container_name: go01
     restart: unless-stopped
     env_file: .env
+    environment:
+      - PORT=${PORT}
+      - GIN_MODE=${GIN_MODE}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_OUTPUT=${LOG_OUTPUT}
+      - AUTHORIZATION_URL=${AUTHORIZATION_URL}
+      - POSTGRES_URL=${POSTGRES_URL}
     ports:
       - "${PORT}:${PORT}"
     depends_on:

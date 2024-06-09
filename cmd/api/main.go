@@ -4,11 +4,11 @@ import (
 	"context"
 	"os"
 
-	"github.com/felipeversiane/picpay-golang.git/bootstrap"
 	"github.com/felipeversiane/picpay-golang.git/config/db"
 	"github.com/felipeversiane/picpay-golang.git/config/logger"
 	"github.com/felipeversiane/picpay-golang.git/internal/router"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
 
@@ -20,11 +20,12 @@ func init() {
 	logger.Info("Initialize methods is going to run...",
 		zap.String("journey", "Initialize"))
 
-	err := bootstrap.Initialize()
-
-	if err != nil {
-		logger.Fatal("Initialize error: ", err,
-			zap.String("journey", "Initialize"))
+	if _, err := os.Stat(".env"); err == nil {
+		err := godotenv.Load()
+		if err != nil {
+			logger.Fatal("Error loading .env file: ", err,
+				zap.String("journey", "Loading .env"))
+		}
 	}
 
 	logger.Info("Initialize methods runned...",

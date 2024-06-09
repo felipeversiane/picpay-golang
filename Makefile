@@ -1,14 +1,14 @@
 .PHONY: up
 up:
-	docker compose up -d
+	docker compose -f docker-compose.ci.yml up -d
 
 .PHONY: down
 down:
-	docker compose down
+	docker compose -f docker-compose.ci.yml down
 
 .PHONY: ci
 ci:
-	docker compose up -d --build api
+	docker compose -f docker-compose.ci.yml up -d --build api
 
 .PHONY: runapi
 runapi:

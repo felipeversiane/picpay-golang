@@ -3,8 +3,11 @@ version: '3.0'
 services:
   db:
     container_name: pg01
-    image: postgres:11-alpine
+    build:
+      context: .
+      dockerfile: build/db/Dockerfile
     environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
@@ -46,11 +49,12 @@ services:
     container_name: go01
     restart: unless-stopped
     environment:
-      LOG_LEVEL: ${LOG_LEVEL}
-      GIN_MODE: ${GIN_MODE}
-      LOG_OUTPUT: ${LOG_OUTPUT}
-      AUTHORIZATION_URL: ${AUTHORIZATION_URL}
-      POSTGRES_URL: ${POSTGRES_URL}
+      - PORT=${PORT}
+      - GIN_MODE=${GIN_MODE}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_OUTPUT=${LOG_OUTPUT}
+      - AUTHORIZATION_URL=${AUTHORIZATION_URL}
+      - POSTGRES_URL=${POSTGRES_URL}
     ports:
       - "${PORT}:${PORT}"
     depends_on:
@@ -61,8 +65,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.1'
-          memory: '0.1GB'
+          cpus: '0.2'
+          memory: '0.2GB'
 
 volumes:
   local_postgres_data: {}

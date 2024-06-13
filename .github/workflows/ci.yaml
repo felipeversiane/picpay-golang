@@ -31,30 +31,36 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Download dependencies
+        run: go mod download
+
       - name: Build
         run: go build -v ./...
 
       - name: Test
         run: go test -v ./internal/...
 
-  # security:
-  #   runs-on: ubuntu-22.04
-  #   steps:
-  #     - uses: actions/checkout@v3  
+  security:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3  
 
-  #     - name: Run Snyk to check for Go vulnerabilities
-  #       uses: snyk/actions/golang@master
-  #       with:
-  #         args: --severity-threshold=critical
+      - name: Run Snyk to check for Go vulnerabilities
+        uses: snyk/actions/golang@master
+        with:
+          args: --severity-threshold=critical
         
   test:
-    needs: [build]  
+    needs: [build, security]
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
 
       - name: Set up Docker Compose
         run: docker-compose -f docker-compose.ci.yml up -d --build
+
+      - name: Wait for services to be ready
+        run: docker-compose -f docker-compose.ci.yml run --rm wait-for-it.sh db:5432 --timeout=60 --strict -- echo "Database is up"
 
       - name: Run project
         run: make ci
@@ -67,10 +73,12 @@ jobs:
       - name: Run E2E tests
         run: go test -v ./e2e/...
 
-      - if: failure()
+      - name: Get Docker Compose status
+        if: failure()
         run: docker-compose -f docker-compose.ci.yml ps
 
-      - if: failure()
+      - name: Get Docker Compose logs
+        if: failure()
         run: docker-compose -f docker-compose.ci.yml logs
 
       - name: Tear Down

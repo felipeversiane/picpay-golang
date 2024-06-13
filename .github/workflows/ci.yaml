@@ -59,6 +59,9 @@ jobs:
       - name: Set up Docker Compose
         run: docker-compose -f docker-compose.ci.yml up -d --build --no-cache
 
+      - name: Ensure wait-for-it.sh has execution permissions
+        run: chmod +x ./sh/wait-for-it.sh
+
       - name: Wait for API to be ready
         run: ./sh/wait-for-it.sh localhost:${{ secrets.PORT }} --timeout=60
 

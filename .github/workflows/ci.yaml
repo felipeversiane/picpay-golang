@@ -59,9 +59,6 @@ jobs:
       - name: Set up Docker Compose
         run: docker-compose -f docker-compose.ci.yml up -d --build
 
-      - name: Wait for services to be ready
-        run: docker-compose -f docker-compose.ci.yml run --rm wait-for-it.sh db:5432 --timeout=60 --strict -- echo "Database is up"
-
       - name: Run project
         run: make ci
 

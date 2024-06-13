@@ -57,7 +57,10 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Set up Docker Compose
-        run: docker-compose -f docker-compose.ci.yml up -d --build
+        run: docker-compose -f docker-compose.ci.yml up -d --build --no-cache
+
+      - name: Wait for API to be ready
+        run: ./sh/wait-for-it.sh localhost:${{ secrets.PORT }} --timeout=60
 
       - name: Run project
         run: make ci

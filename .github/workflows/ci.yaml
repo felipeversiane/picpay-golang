@@ -102,9 +102,9 @@ jobs:
     needs: [migrate]
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy API
+      - name: Deploy API to Render
         run: |
           curl -X POST \
             -H "Content-Type: application/json" \
             -d '{"branch": "main"}' \
-            ${{ env.DB_URL }}
+            ${{ env.DEPLOY_HOOK }}

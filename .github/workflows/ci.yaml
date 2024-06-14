@@ -19,7 +19,8 @@ env:
   POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
   POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
   SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-  DB_URL: ${{ secrets.DB_URL }} 
+  DB_URL: ${{ secrets.DB_URL }}
+  DEPLOY_HOOK: ${{ secrets.DEPLOY_HOOK }} 
 
 jobs:
   build:
@@ -32,6 +33,14 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Cache Go dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Download dependencies
         run: go mod download
 
@@ -39,7 +48,8 @@ jobs:
         run: go build -v ./...
 
       - name: Test
-        run: go test -v ./internal/...
+        run: |
+          make ci
 
   security:
     runs-on: ubuntu-22.04
@@ -50,10 +60,17 @@ jobs:
         uses: snyk/actions/golang@master
         with:
           args: --severity-threshold=critical
-        
+           
   test:
     needs: [build, security]
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - name: Integration Tests
+            test_command: go test -v ./internal/...
+          - name: E2E Tests
+            test_command: go test -v ./e2e/...
     steps:
       - uses: actions/checkout@v3
 
@@ -61,21 +78,12 @@ jobs:
         run: docker-compose -f docker-compose.ci.yml up -d --build --no-cache
 
       - name: Run project
-        run: make ci
+        run: ${{ matrix.test_command }}
 
-      - name: Set up Go for E2E tests
-        uses: actions/setup-go@v3
-        with:
-          go-version-file: go.mod
-
-      - name: Run E2E tests
-        run: go test -v ./e2e/...
-
-      - name: Get Docker Compose status
-        if: failure()
+      - name: Check Docker Compose status
         run: docker-compose -f docker-compose.ci.yml ps
 
-      - name: Get Docker Compose logs
+      - name: Get Docker Compose logs on failure
         if: failure()
         run: docker-compose -f docker-compose.ci.yml logs
 
@@ -97,3 +105,14 @@ jobs:
             -path /migrations \
             -database "${{ env.DB_URL }}" \
             up
+
+  deploy:
+    needs: [migrate]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy API to Render
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"branch": "main"}' \
+            ${{ env.DEPLOY_HOOK }}

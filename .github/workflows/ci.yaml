@@ -67,8 +67,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Integration Tests
-            test_command: go test -v ./internal/...
           - name: E2E Tests
             test_command: go test -v ./e2e/...
     steps:

@@ -43,25 +43,25 @@ For a full list of dependencies, please refer to the [go.mod](https://github.com
 - **Method:** `GET`
 - **Endpoint:** `/api/v1/user/{id}`
 
-  #### Get User By Email
+#### Get User By Email
 
 - **Description:** Find a user with the provided email.
 - **Method:** `GET`
 - **Endpoint:** `/api/v1/user/find_user_by_email/{email}`
 
- #### Get User By Document
+#### Get User By Document
 
 - **Description:** Find a user with the provided document.
 - **Method:** `GET`
 - **Endpoint:** `/api/v1/user/find_user_by_document/{document}`
 
- #### Get User By Document
+#### Get User By Document
 
 - **Description:** Find a user with the provided document.
 - **Method:** `GET`
 - **Endpoint:** `/api/v1/user/find_user_by_document/{document}`
 
- #### Update User
+#### Update User
 
 - **Description:** Update a user with the provided ID.
 - **Method:** `PUT`
@@ -76,7 +76,7 @@ For a full list of dependencies, please refer to the [go.mod](https://github.com
     "balance": 200.00
   }
 
- #### Delete User
+#### Delete User
 
 - **Description:** Delete a user with the provided id.
 - **Method:** `DELETE`

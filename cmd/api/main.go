@@ -35,7 +35,7 @@ func init() {
 // @title PicPay Challange
 // @version 1.0
 // @description REST API for a PicPay Challange.
-// @host localhost:9000
+// @host picpay-golang.onrender.com/docs/index.html
 // @BasePath /api/v1
 // @schemes http
 // @termsOfService http://swagger.io/terms/

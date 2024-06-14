@@ -49,11 +49,6 @@ For a full list of dependencies, please refer to the [go.mod](https://github.com
 - **Method:** `GET`
 - **Endpoint:** `/api/v1/user/find_user_by_email/{email}`
 
-#### Get User By Document
-
-- **Description:** Find a user with the provided document.
-- **Method:** `GET`
-- **Endpoint:** `/api/v1/user/find_user_by_document/{document}`
 
 #### Get User By Document
 

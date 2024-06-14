@@ -33,14 +33,6 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Cache Go dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
       - name: Download dependencies
         run: go mod download
 
@@ -48,8 +40,7 @@ jobs:
         run: go build -v ./...
 
       - name: Test
-        run: |
-          make ci
+        run: go test -v ./internal/...
 
   security:
     runs-on: ubuntu-22.04
@@ -60,15 +51,10 @@ jobs:
         uses: snyk/actions/golang@master
         with:
           args: --severity-threshold=critical
-           
+        
   test:
     needs: [build, security]
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        include:
-          - name: E2E Tests
-            test_command: go test -v ./e2e/...
     steps:
       - uses: actions/checkout@v3
 
@@ -76,12 +62,21 @@ jobs:
         run: docker-compose -f docker-compose.ci.yml up -d --build --no-cache
 
       - name: Run project
-        run: ${{ matrix.test_command }}
+        run: make ci
 
-      - name: Check Docker Compose status
+      - name: Set up Go for E2E tests
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+
+      - name: Run E2E tests
+        run: go test -v ./e2e/...
+
+      - name: Get Docker Compose status
+        if: failure()
         run: docker-compose -f docker-compose.ci.yml ps
 
-      - name: Get Docker Compose logs on failure
+      - name: Get Docker Compose logs
         if: failure()
         run: docker-compose -f docker-compose.ci.yml logs
 
@@ -103,14 +98,13 @@ jobs:
             -path /migrations \
             -database "${{ env.DB_URL }}" \
             up
-
   deploy:
     needs: [migrate]
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy API to Render
+      - name: Deploy API
         run: |
           curl -X POST \
             -H "Content-Type: application/json" \
             -d '{"branch": "main"}' \
-            ${{ env.DEPLOY_HOOK }}
+            ${{ env.DB_URL }}

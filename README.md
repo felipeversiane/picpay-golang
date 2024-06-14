@@ -15,7 +15,7 @@ The API allows for the management of users and transfers. Below are described th
 
 For a full list of dependencies, please refer to the [go.mod](https://github.com/felipeversiane/picpay-golang/blob/main/go.mod) file.
 
-## Functionalities
+## Endpoints
 
 ### Users
 
